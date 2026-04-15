@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Assessment Report – AI Feedback</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --color-text-primary:#1a1a1a;
+  --color-text-secondary:#6b6a66;
+  --color-background-primary:#ffffff;
+  --color-background-secondary:#f6f5f2;
+  --color-border-primary:#d4d2ca;
+  --color-border-secondary:#e0deda;
+  --color-border-tertiary:#ebe9e4;
+  --font-sans:'Segoe UI',system-ui,sans-serif;
+  --border-radius-md:6px;
+  --border-radius-lg:10px;
+}
+body{background:var(--color-background-secondary);min-height:100vh;padding:1.5rem 1rem}
+.wrap{max-width:800px;margin:0 auto;padding:2rem 1.5rem;font-family:var(--font-sans);background:var(--color-background-primary);border-radius:var(--border-radius-lg);border:0.5px solid var(--color-border-primary)}
+.header{border-bottom:2px solid var(--color-border-primary);padding-bottom:1.25rem;margin-bottom:1rem}
+.badge{display:inline-block;background:#EEEDFE;color:#3C3489;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.75rem}
+.header h1{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.header p{font-size:13px;color:var(--color-text-secondary);margin-top:4px}
+.save-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);margin-bottom:1.5rem;font-size:12px;color:var(--color-text-secondary);flex-wrap:wrap;gap:8px}
+.save-dot{width:7px;height:7px;border-radius:50%;background:#888780;flex-shrink:0;transition:background .3s}
+.save-dot.saving{background:#EF9F27}.save-dot.saved{background:#1D9E75}
+.mini-btn{padding:4px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-size:12px;cursor:pointer;background:var(--color-background-primary);color:var(--color-text-primary)}
+.mini-btn:hover{background:var(--color-background-secondary)}
+.prog-bar{height:3px;background:var(--color-border-tertiary);border-radius:2px;margin-bottom:1.5rem;overflow:hidden}
+.prog-fill{height:100%;background:#534AB7;border-radius:2px;transition:width .3s}
+.restore-banner{display:none;background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:1.5rem;font-size:13px;color:#3C3489;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.restore-banner.show{display:flex}
+.section{margin-bottom:2rem}
+.sec-label{display:flex;align-items:center;gap:10px;margin-bottom:.75rem}
+.sec-letter{width:28px;height:28px;border-radius:50%;background:#EEEDFE;color:#534AB7;font-weight:500;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-title{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.sec-hint{font-size:12px;color:var(--color-text-secondary);margin-top:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:var(--color-text-secondary)}
+input[type=text],input[type=date],textarea,select{width:100%;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary);background:var(--color-background-primary);outline:none;transition:border-color .15s}
+input[type=text]:focus,input[type=date]:focus,textarea:focus,select:focus{border-color:#534AB7;box-shadow:0 0 0 3px rgba(83,74,183,.12)}
+textarea{resize:vertical;min-height:66px;line-height:1.5}
+.tbl{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.tbl-hdr{display:grid;padding:8px 12px;background:#EEEDFE;font-size:12px;font-weight:500;color:#534AB7;gap:10px}
+.h-hdr{grid-template-columns:36px 1fr}
+.e-hdr{grid-template-columns:36px 1fr 130px}
+.s-hdr{grid-template-columns:36px 1fr}
+.tbl-row{display:grid;padding:8px 12px;gap:10px;border-top:0.5px solid var(--color-border-tertiary);align-items:center}
+.tbl-row:hover{background:var(--color-background-secondary)}
+.h-row{grid-template-columns:36px 1fr}
+.e-row{grid-template-columns:36px 1fr 130px}
+.s-row{grid-template-columns:36px 1fr}
+.row-num{width:24px;height:24px;border-radius:50%;border:0.5px solid var(--color-border-secondary);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--color-text-secondary);flex-shrink:0}
+.risk-sel{padding:6px 8px;font-size:12px}
+.risk-LOW{border-color:#0F6E56!important;color:#085041!important;background:#E1F5EE!important}
+.risk-MEDIUM{border-color:#854F0B!important;color:#633806!important;background:#FAEEDA!important}
+.risk-HIGH{border-color:#993C1D!important;color:#712B13!important;background:#FAECE7!important}
+.lang-tip{background:#EEEDFE;border:0.5px solid #AFA9EC;border-radius:var(--border-radius-md);padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#3C3489;line-height:1.6}
+.lang-tip strong{font-weight:500}
+.warn-row{font-size:12px;color:var(--color-text-secondary);display:flex;align-items:center;gap:5px;margin-top:8px}
+.warn-dot{width:6px;height:6px;border-radius:50%;background:#EF9F27;flex-shrink:0}
+.divider{border:none;border-top:0.5px solid var(--color-border-tertiary);margin:2rem 0}
+.sig-footer{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;align-items:end;margin-top:2rem;padding-top:1.5rem;border-top:0.5px solid var(--color-border-secondary)}
+.actions{display:flex;gap:10px;margin-top:2rem;flex-wrap:wrap}
+.btn{padding:9px 20px;border-radius:var(--border-radius-md);font-size:14px;font-weight:500;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);transition:background .15s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#534AB7;color:white;border-color:#534AB7}
+.btn-primary:hover{background:#3C3489}
+.btn-teal{background:#0F6E56;color:white;border-color:#0F6E56}
+.btn-teal:hover{background:#085041}
+.complete-panel{display:none;background:#E1F5EE;border:0.5px solid #5DCAA5;border-radius:var(--border-radius-lg);padding:1.25rem;margin-top:1.5rem}
+.complete-panel h3{font-size:15px;font-weight:500;color:#085041;margin-bottom:6px}
+.complete-panel p{font-size:13px;color:#0F6E56;margin-bottom:1rem}
+
+/* ── AI Feedback Panel (Section H only) ─────────────────── */
+.ai-section{margin-top:16px;border:1.5px solid #AFA9EC;border-radius:var(--border-radius-lg);overflow:hidden}
+.ai-section-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#EEEDFE;flex-wrap:wrap;gap:8px}
+.ai-section-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#3C3489}
+.ai-btn{display:inline-flex;align-items:center;gap:6px;padding:7px 15px;border-radius:var(--border-radius-md);font-size:12px;font-weight:600;cursor:pointer;border:none;background:#534AB7;color:white;transition:background .15s;letter-spacing:.01em}
+.ai-btn:hover{background:#3C3489}
+.ai-btn:disabled{opacity:.5;cursor:not-allowed}
+.ai-body{padding:14px;background:var(--color-background-primary)}
+.ai-placeholder{font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.ai-placeholder strong{color:var(--color-text-primary)}
+
+/* Loading */
+.ai-loading{display:flex;align-items:center;gap:9px;color:var(--color-text-secondary);font-size:13px;padding:2px 0}
+.ai-dots{display:flex;gap:4px}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:#534AB7;animation:bounce .9s infinite ease-in-out}
+.ai-dot:nth-child(2){animation-delay:.15s}.ai-dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:scale(0.6);opacity:.4}40%{transform:scale(1);opacity:1}}
+
+/* Per-solution cards */
+.sol-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);overflow:hidden;margin-bottom:10px}
+.sol-card:last-of-type{margin-bottom:0}
+.sol-card-hdr{padding:7px 12px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px;color:var(--color-text-secondary)}
+.sol-card-hdr strong{color:var(--color-text-primary);font-size:13px}
+.sol-card-body{padding:11px 12px;display:flex;flex-direction:column;gap:9px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;border-radius:20px}
+.chip-ok{background:#E1F5EE;color:#085041}
+.chip-fix{background:#FAECE7;color:#712B13}
+.chip-warn{background:#FAEEDA;color:#633806}
+.fb-line{font-size:13px;color:var(--color-text-primary);line-height:1.6}
+.fb-rewrite{margin-top:2px;padding:7px 11px;background:#f0effe;border-left:3px solid #534AB7;border-radius:0 5px 5px 0;font-size:12.5px;color:#2d2680;line-height:1.55}
+.fb-rewrite-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7b73d4;margin-bottom:3px}
+
+/* Summary */
+.ai-summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 14px;border-top:0.5px solid var(--color-border-tertiary);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div class="badge">Diploma — Risk Assessment</div>
+    <h1>Risk Assessment Report</h1>
+    <p>Complete all sections carefully. Minimum 4 hazards and 4 solutions required.</p>
+  </div>
+
+  <div class="restore-banner" id="restore-banner">
+    <span id="restore-msg">Saved progress found from a previous session.</span>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button class="mini-btn" style="background:#534AB7;color:white;border-color:#534AB7" onclick="restoreData()">Restore</button>
+      <button class="mini-btn" onclick="dismissRestore()">Start fresh</button>
+    </div>
+  </div>
+
+  <div class="save-bar">
+    <div style="display:flex;align-items:center;gap:6px"><div class="save-dot" id="save-dot"></div><span id="save-status">Not yet saved</span></div>
+    <div style="display:flex;gap:8px">
+      <button class="mini-btn" onclick="manualSave()">Save now</button>
+      <button class="mini-btn" onclick="confirmClearSave()">Clear saved data</button>
+    </div>
+  </div>
+
+  <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+
+  <!-- A -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">A</div><div><div class="sec-title">Title</div></div></div>
+    <input type="text" id="f-title" placeholder="e.g. Risk Assessment for Workshop Power Tools Usage" oninput="onEdit()" />
+  </div>
+
+  <!-- B -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">B</div><div><div class="sec-title">Introduction</div></div></div>
+    <textarea id="f-intro" rows="3" placeholder="Explain the background and reason for this risk assessment..." oninput="onEdit()"></textarea>
+  </div>
+
+  <!-- C -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">C</div><div><div class="sec-title">Date and Location</div></div></div>
+    <div class="row2">
+      <div class="field"><label>Date of assessment</label><input type="date" id="f-date" oninput="onEdit()" /></div>
+      <div class="field"><label>Location</label><input type="text" id="f-location" placeholder="e.g. School workshop, Room 14" oninput="onEdit()" /></div>
+    </div>
+  </div>
+
+  <!-- D -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">D</div><div><div class="sec-title">Task Description</div></div></div>
+    <textarea id="f-task" rows="3" placeholder="Describe the activity, tools, equipment, and environment..." oninput="onEdit()"></textarea>
+  </div>
+
+  <!-- E -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">E</div><div><div class="sec-title">Personnel Involved</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="field"><label>Person / Group 1</label><input type="text" id="f-p1" placeholder="e.g. Students" oninput="onEdit()" /></div>
+      <div class="field"><label>Person / Group 2</label><input type="text" id="f-p2" placeholder="e.g. Teacher / Supervisor" oninput="onEdit()" /></div>
+      <div class="field"><label>Person / Group 3</label><input type="text" id="f-p3" placeholder="e.g. Lab technician" oninput="onEdit()" /></div>
+      <div class="field"><label>Person / Group 4</label><input type="text" id="f-p4" placeholder="e.g. Visiting assessor" oninput="onEdit()" /></div>
+    </div>
+  </div>
+
+  <!-- F -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">F</div><div><div class="sec-title">Hazard Identification</div><div class="sec-hint">Use noun phrases or passive constructions</div></div></div>
+    <div class="lang-tip">
+      <strong>Language guide:</strong> Use noun phrases or passive sentences.<br>
+      Good: <em>"Exposure to sharp cutting blades"</em> &nbsp;|&nbsp; <em>"Electrical cables are left exposed on the floor"</em><br>
+      Avoid: <em>"They wear safety boots"</em> &nbsp;|&nbsp; <em>"Sharp things"</em>
+    </div>
+    <div class="tbl">
+      <div class="tbl-hdr h-hdr"><span>No.</span><span>Hazard / Cause of Risk</span></div>
+      <div id="hazard-rows"></div>
+    </div>
+    <div class="warn-row"><div class="warn-dot"></div><span id="hazard-warn">Enter at least 5 hazards (minimum 4 required)</span></div>
+  </div>
+
+  <!-- G -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">G</div><div><div class="sec-title">Risk Evaluation</div><div class="sec-hint">Use modal verbs: could, may, might, can</div></div></div>
+    <div class="lang-tip">
+      <strong>Language guide:</strong> Use modal verbs to express likelihood of harm.<br>
+      Good: <em>"Workers could suffer serious burns"</em> &nbsp;|&nbsp; <em>"Injuries may be sustained by students"</em><br>
+      Avoid: <em>"Workers get burns"</em> &nbsp;|&nbsp; <em>"It is dangerous"</em>
+    </div>
+    <div class="tbl">
+      <div class="tbl-hdr e-hdr"><span>No.</span><span>What could happen if the risk is not controlled?</span><span>Risk Level</span></div>
+      <div id="effect-rows"></div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px">
+      <span style="font-size:12px;background:#E1F5EE;color:#085041;padding:3px 8px;border-radius:4px;">LOW — unlikely / minor harm</span>
+      <span style="font-size:12px;background:#FAEEDA;color:#633806;padding:3px 8px;border-radius:4px;">MEDIUM — possible / moderate harm</span>
+      <span style="font-size:12px;background:#FAECE7;color:#712B13;padding:3px 8px;border-radius:4px;">HIGH — likely / severe harm</span>
+    </div>
+  </div>
+
+  <!-- H — WITH AI FEEDBACK -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">H</div><div><div class="sec-title">Practical Solutions</div><div class="sec-hint">Use obligation modals + passive: should be, must be, shall be</div></div></div>
+    <div class="lang-tip">
+      <strong>Language guide:</strong> Use obligation modals with passive voice.<br>
+      Good: <em>"Safety goggles must be worn at all times"</em> &nbsp;|&nbsp; <em>"All cables shall be secured before the activity begins"</em><br>
+      Avoid: <em>"Wear goggles"</em> &nbsp;|&nbsp; <em>"Students should wear goggles"</em>
+    </div>
+    <div class="tbl">
+      <div class="tbl-hdr s-hdr"><span>No.</span><span>Practical Solution to Reduce or Remove the Risk</span></div>
+      <div id="solution-rows"></div>
+    </div>
+    <div class="warn-row"><div class="warn-dot"></div><span id="solution-warn">Enter at least 5 solutions (minimum 4 required)</span></div>
+
+    <!-- AI Feedback block -->
+    <div class="ai-section">
+      <div class="ai-section-hdr">
+        <div class="ai-section-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#534AB7" stroke-width="2.5"><path d="M12 2a10 10 0 1 1 0 20A10 10 0 0 1 12 2z"/><path d="M9 12l2 2 4-4"/></svg>
+          AI Writing Feedback — Practical Solutions
+        </div>
+        <button class="ai-btn" id="ai-btn" onclick="getSolutionFeedback()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          Check my solutions
+        </button>
+      </div>
+      <div class="ai-body" id="ai-body">
+        <p class="ai-placeholder">Write your solutions above, then click <strong>Check my solutions</strong> to get personalised feedback on your language patterns and completeness.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- I -->
+  <div class="section">
+    <div class="sec-label"><div class="sec-letter">I</div><div><div class="sec-title">Conclusion</div></div></div>
+    <textarea id="f-conclusion" rows="4" placeholder="Summarize key hazards, risk levels, and most important solutions..." oninput="onEdit()"></textarea>
+  </div>
+
+  <hr class="divider">
+  <div class="sig-footer">
+    <div class="field"><label>Prepared by</label><input type="text" id="f-preparer" placeholder="Full name" oninput="onEdit()" /></div>
+    <div class="field"><label>Signature</label><input type="text" id="f-signature" placeholder="Type your full name as signature" oninput="onEdit()" /></div>
+    <div class="field"><label>Date submitted</label><input type="date" id="f-submitdate" oninput="onEdit()" /></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-primary" onclick="submitForm()">Submit &amp; download report</button>
+    <button class="btn" onclick="confirmClear()">Clear form</button>
+  </div>
+
+  <div class="complete-panel" id="complete-panel">
+    <h3>Report ready to download</h3>
+    <p>Your report has been saved. Download the file and submit it to your teacher.</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-teal" onclick="downloadTxt()">Download as .txt</button>
+      <button class="btn btn-teal" onclick="downloadHtml()">Download as .html</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ROWS = 6;
+const STORAGE_KEY = 'risk_assessment_v6';
+const SIMPLE_FIELDS = ['f-title','f-intro','f-date','f-location','f-task','f-p1','f-p2','f-p3','f-p4','f-conclusion','f-preparer','f-signature','f-submitdate'];
+let saveTimer = null, pendingData = null;
+
+function buildRows() {
+  const hC = document.getElementById('hazard-rows');
+  const eC = document.getElementById('effect-rows');
+  const sC = document.getElementById('solution-rows');
+  for (let i = 1; i <= ROWS; i++) {
+    hC.innerHTML += `<div class="tbl-row h-row"><div class="row-num">${i}</div><input type="text" id="h${i}" placeholder="Describe hazard ${i}..." oninput="onEdit()" /></div>`;
+    eC.innerHTML += `<div class="tbl-row e-row"><div class="row-num">${i}</div><input type="text" id="e${i}" placeholder="What could happen if not controlled..." oninput="onEdit()" /><select class="risk-sel" id="r${i}" onchange="styleRisk(this);onEdit()"><option value="">— select —</option><option value="LOW">LOW</option><option value="MEDIUM">MEDIUM</option><option value="HIGH">HIGH</option></select></div>`;
+    sC.innerHTML += `<div class="tbl-row s-row"><div class="row-num">${i}</div><input type="text" id="s${i}" placeholder="Describe solution ${i}..." oninput="onEdit()" /></div>`;
+  }
+}
+
+function styleRisk(sel) { sel.className = 'risk-sel'; if (sel.value) sel.classList.add('risk-' + sel.value); }
+function v(id) { return (document.getElementById(id) || {}).value || ''; }
+
+function collectData() {
+  const d = {};
+  SIMPLE_FIELDS.forEach(f => { d[f] = v(f); });
+  for (let i = 1; i <= ROWS; i++) { d['h'+i]=v('h'+i); d['e'+i]=v('e'+i); d['r'+i]=v('r'+i); d['s'+i]=v('s'+i); }
+  d._savedAt = new Date().toISOString();
+  return d;
+}
+
+function applyData(d) {
+  SIMPLE_FIELDS.forEach(f => { const el = document.getElementById(f); if (el) el.value = d[f] || ''; });
+  for (let i = 1; i <= ROWS; i++) {
+    const h=document.getElementById('h'+i); if(h) h.value=d['h'+i]||'';
+    const e=document.getElementById('e'+i); if(e) e.value=d['e'+i]||'';
+    const r=document.getElementById('r'+i); if(r){r.value=d['r'+i]||'';styleRisk(r);}
+    const s=document.getElementById('s'+i); if(s) s.value=d['s'+i]||'';
+  }
+  updateProgress();
+}
+
+function setSaveStatus(state, msg) {
+  document.getElementById('save-dot').className = 'save-dot ' + state;
+  document.getElementById('save-status').textContent = msg;
+}
+
+async function saveData() {
+  const d = collectData();
+  setSaveStatus('saving', 'Saving...');
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(d));
+    setSaveStatus('saved', 'Saved at ' + new Date(d._savedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}));
+  } catch(e) { setSaveStatus('', 'Save failed'); }
+}
+
+function onEdit() {
+  setSaveStatus('saving', 'Unsaved changes...');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveData, 1500);
+  updateProgress();
+}
+
+function manualSave() { clearTimeout(saveTimer); saveData(); }
+
+async function loadSaved() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY);
+    if (result && result.value) {
+      const d = JSON.parse(result.value);
+      const has = SIMPLE_FIELDS.some(f => d[f]) || Array.from({length:ROWS}, (_,i) => i+1).some(i => d['h'+i] || d['s'+i]);
+      if (has) {
+        pendingData = d;
+        const t = new Date(d._savedAt);
+        document.getElementById('restore-msg').textContent = `Saved progress found from ${t.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'})} at ${t.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}.`;
+        document.getElementById('restore-banner').classList.add('show');
+        setSaveStatus('saved', 'Previous save available');
+      } else { setSaveStatus('', 'No saved data'); }
+    } else { setSaveStatus('', 'No saved data'); }
+  } catch(e) { setSaveStatus('', 'Ready'); }
+}
+
+function restoreData() { if (pendingData) { applyData(pendingData); setSaveStatus('saved', 'Restored'); } document.getElementById('restore-banner').classList.remove('show'); pendingData = null; }
+function dismissRestore() { document.getElementById('restore-banner').classList.remove('show'); pendingData = null; setSaveStatus('', 'Starting fresh'); }
+async function confirmClearSave() { if (!confirm('Delete all saved data?')) return; try { await window.storage.delete(STORAGE_KEY); } catch(e) {} setSaveStatus('', 'Cleared'); }
+
+function filledCount(p) { let c=0; for(let i=1;i<=ROWS;i++){if(v(p+i).trim())c++;} return c; }
+
+function updateProgress() {
+  const req = ['f-title','f-intro','f-date','f-location','f-task','f-p1','f-conclusion','f-preparer'];
+  const filled = req.filter(f => v(f).trim()).length;
+  const hc = filledCount('h'), sc = filledCount('s');
+  const hw = document.getElementById('hazard-warn'), sw = document.getElementById('solution-warn');
+  if (hc>=4){hw.textContent=hc+' hazard'+(hc>1?'s':'')+' entered';hw.style.color='#0F6E56';}
+  else{hw.textContent='Enter at least 5 hazards ('+hc+' so far)';hw.style.color='';}
+  if (sc>=4){sw.textContent=sc+' solution'+(sc>1?'s':'')+' entered';sw.style.color='#0F6E56';}
+  else{sw.textContent='Enter at least 5 solutions ('+sc+' so far)';sw.style.color='';}
+  document.getElementById('prog-fill').style.width = Math.round(((filled+Math.min(hc,5)+Math.min(sc,5))/(req.length+10))*100)+'%';
+}
+
+function validate() {
+  const req = ['f-title','f-intro','f-date','f-location','f-task','f-conclusion','f-preparer'];
+  if (req.some(f => !v(f).trim())) { alert('Please complete all required fields before submitting.'); return false; }
+  if (filledCount('h') < 4) { alert('Please enter at least 4 hazards (Section F).'); return false; }
+  if (filledCount('s') < 4) { alert('Please enter at least 4 solutions (Section H).'); return false; }
+  return true;
+}
+
+function submitForm() {
+  if (!validate()) return;
+  clearTimeout(saveTimer); saveData();
+  document.getElementById('complete-panel').style.display = 'block';
+  document.getElementById('prog-fill').style.width = '100%';
+  window.scrollTo({top: 999999, behavior: 'smooth'});
+}
+
+function buildTxt() {
+  const rl = {LOW:'LOW', MEDIUM:'MEDIUM', HIGH:'HIGH', '':'Not rated'};
+  let rows = '';
+  for(let i=1;i<=ROWS;i++){const h=v('h'+i),e=v('e'+i),r=v('r'+i),s=v('s'+i);if(h||e)rows+=`\n  ${i}. Hazard:   ${h||'—'}\n     Effect:   ${e||'—'}\n     Risk:     ${rl[r]||'—'}\n     Solution: ${s||'—'}\n`;}
+  const per = [v('f-p1'),v('f-p2'),v('f-p3'),v('f-p4')].filter(Boolean).join(', ')||'—';
+  return `RISK ASSESSMENT REPORT\n${'='.repeat(60)}\nTITLE: ${v('f-title')||'—'}\nDATE: ${v('f-date')||'—'}   LOCATION: ${v('f-location')||'—'}\nPERSONNEL: ${per}\n\nINTRODUCTION\n${'-'.repeat(40)}\n${v('f-intro')||'—'}\n\nTASK DESCRIPTION\n${'-'.repeat(40)}\n${v('f-task')||'—'}\n\nHAZARDS, EFFECTS & SOLUTIONS\n${'-'.repeat(40)}${rows}\nCONCLUSION\n${'-'.repeat(40)}\n${v('f-conclusion')||'—'}\n\n${'='.repeat(60)}\nPrepared by: ${v('f-preparer')||'—'}   Signature: ${v('f-signature')||'—'}   Date: ${v('f-submitdate')||'—'}\nGenerated: ${new Date().toLocaleString()}`;
+}
+
+function buildHtml() {
+  const rc = {LOW:'background:#E1F5EE;color:#085041', MEDIUM:'background:#FAEEDA;color:#633806', HIGH:'background:#FAECE7;color:#712B13', '':'background:#F1EFE8;color:#5F5E5A'};
+  let hr='', sr='';
+  for(let i=1;i<=ROWS;i++){
+    const h=v('h'+i),e=v('e'+i),r=v('r'+i),s=v('s'+i);
+    if(h||e) hr+=`<tr><td style="padding:7px 10px;border-bottom:1px solid #eee;color:#aaa;font-size:12px">${i}</td><td style="padding:7px 10px;border-bottom:1px solid #eee">${h||'—'}</td><td style="padding:7px 10px;border-bottom:1px solid #eee">${e||'—'}</td><td style="padding:7px 10px;border-bottom:1px solid #eee"><span style="padding:2px 8px;border-radius:4px;font-size:12px;${rc[r]||rc['']}">${r||'—'}</span></td></tr>`;
+    if(s) sr+=`<tr><td style="padding:7px 10px;border-bottom:1px solid #eee;color:#aaa;font-size:12px">${i}</td><td style="padding:7px 10px;border-bottom:1px solid #eee">${s}</td></tr>`;
+  }
+  const per = [v('f-p1'),v('f-p2'),v('f-p3'),v('f-p4')].filter(Boolean).join(', ')||'—';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Risk Assessment</title><style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:0 20px;font-size:14px;color:#222}h2{font-size:14px;font-weight:600;border-bottom:2px solid #534AB7;color:#3C3489;padding-bottom:4px;margin:1.5rem 0 .75rem}.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin:1rem 0}.meta label{font-size:11px;color:#888;display:block;text-transform:uppercase}.prose{background:#f9f9f9;padding:12px;border-radius:6px;line-height:1.6}table{width:100%;border-collapse:collapse;font-size:13px}th{background:#EEEDFE;color:#3C3489;padding:8px 10px;text-align:left;font-weight:600}td{vertical-align:top}.sig{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}.sig label{font-size:11px;color:#888;display:block;text-transform:uppercase}.sig span{border-bottom:1px solid #ccc;display:block;padding-bottom:4px;min-height:22px}</style></head><body>
+<div style="display:inline-block;background:#EEEDFE;color:#3C3489;font-size:11px;padding:2px 10px;border-radius:20px;margin-bottom:.75rem">Diploma — Risk Assessment</div>
+<h1 style="font-size:20px;margin-bottom:4px">${v('f-title')||'Risk Assessment Report'}</h1>
+<div class="meta"><div><label>Date</label><span>${v('f-date')||'—'}</span></div><div><label>Location</label><span>${v('f-location')||'—'}</span></div><div><label>Personnel</label><span>${per}</span></div><div><label>Generated</label><span>${new Date().toLocaleDateString()}</span></div></div>
+<h2>Introduction</h2><div class="prose">${v('f-intro')||'—'}</div>
+<h2>Task Description</h2><div class="prose">${v('f-task')||'—'}</div>
+<h2>Hazards, Effects &amp; Risk Levels</h2><table><thead><tr><th>#</th><th>Hazard</th><th>Effect if uncontrolled</th><th>Risk</th></tr></thead><tbody>${hr||'<tr><td colspan="4" style="padding:8px;color:#aaa">None entered</td></tr>'}</tbody></table>
+<h2>Practical Solutions</h2><table><thead><tr><th>#</th><th>Solution</th></tr></thead><tbody>${sr||'<tr><td colspan="2" style="padding:8px;color:#aaa">None entered</td></tr>'}</tbody></table>
+<h2>Conclusion</h2><div class="prose">${v('f-conclusion')||'—'}</div>
+<h2>Declaration</h2><div class="sig"><div><label>Prepared by</label><span>${v('f-preparer')||''}</span></div><div><label>Signature</label><span>${v('f-signature')||''}</span></div><div><label>Date submitted</label><span>${v('f-submitdate')||''}</span></div></div>
+</body></html>`;
+}
+
+function triggerDl(content, filename, type) {
+  const b = new Blob([content], {type});
+  const u = URL.createObjectURL(b);
+  const a = document.createElement('a');
+  a.href = u; a.download = filename; a.click();
+  URL.revokeObjectURL(u);
+}
+function safeName() {
+  const n = v('f-preparer').replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_]/g,'')||'student';
+  const d = v('f-date')||new Date().toISOString().slice(0,10);
+  return `RiskAssessment_${n}_${d}`;
+}
+function downloadTxt() { triggerDl(buildTxt(), safeName()+'.txt', 'text/plain'); }
+function downloadHtml() { triggerDl(buildHtml(), safeName()+'.html', 'text/html'); }
+
+function confirmClear() {
+  if (!confirm('Clear the entire form? Saved storage data will remain.')) return;
+  document.querySelectorAll('input, textarea, select').forEach(el => { el.value = ''; });
+  document.querySelectorAll('.risk-sel').forEach(s => { s.className = 'risk-sel'; });
+  document.getElementById('complete-panel').style.display = 'none';
+  updateProgress(); setSaveStatus('', 'Form cleared');
+}
+
+/* ══════════════════════════════════════════════════════
+   AI FEEDBACK — SECTION H ONLY
+   Focus: (1) Modal + passive pattern  (2) Completeness
+   ══════════════════════════════════════════════════════ */
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function getSolutionFeedback() {
+  const btn = document.getElementById('ai-btn');
+  const body = document.getElementById('ai-body');
+
+  // Gather filled solutions
+  const entries = [];
+  for (let i = 1; i <= ROWS; i++) {
+    const text = v('s'+i).trim();
+    if (text) entries.push({ num: i, text });
+  }
+
+  if (entries.length === 0) {
+    body.innerHTML = '<p class="ai-placeholder">Please write at least one solution in Section H before checking.</p>';
+    return;
+  }
+
+  btn.disabled = true;
+  body.innerHTML = `<div class="ai-loading">
+    <div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div>
+    <span>Checking your solutions…</span>
+  </div>`;
+
+  const solutionList = entries.map(e => `${e.num}. ${e.text}`).join('\n');
+
+  const prompt = `You are an English language teacher assessing a Diploma student's Risk Assessment report in Malaysia.
+
+The student has written these Practical Solutions for Section H:
+${solutionList}
+
+Evaluate each solution on TWO criteria only:
+
+CRITERION 1 — LANGUAGE PATTERN (modal + passive)
+The required structure is: [Object/Subject] + must/should/shall + be + past participle
+- CORRECT: "Safety goggles must be worn at all times"
+- CORRECT: "All loose cables shall be secured before the session begins"
+- CORRECT: "The area should be inspected by a supervisor before use"
+- WRONG — active imperative: "Wear safety goggles"
+- WRONG — active subject: "Students must wear goggles" (subject is doing the action)
+- WRONG — no modal: "Safety goggles are worn"
+
+CRITERION 2 — COMPLETENESS / SPECIFICITY
+The solution must be specific enough to actually control a real hazard.
+- Too vague: "Be careful" / "Follow safety rules" / "Use equipment properly"
+- Specific enough: "All loose clothing must be tied back before operating the lathe machine"
+
+For EACH solution, return one JSON object with:
+- "num": entry number (integer)
+- "text": original text (string)
+- "pattern_ok": true/false — correctly uses modal + passive?
+- "complete_ok": true/false — specific and detailed enough?
+- "pattern_comment": one sentence explaining the language pattern result
+- "complete_comment": one sentence explaining the completeness result
+- "rewrite": an improved version of the solution using correct modal + passive structure (always provide this)
+
+Return ONLY a valid JSON array. No markdown fences, no extra text.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const raw = data.content.map(c => c.text || '').join('').trim()
+      .replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/```\s*$/,'').trim();
+    const items = JSON.parse(raw);
+    renderFeedback(body, items);
+  } catch(err) {
+    body.innerHTML = `<p style="font-size:13px;color:#712B13;">Could not load feedback — please check your connection and try again.<br><small style="color:#aaa">${err.message}</small></p>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderFeedback(body, items) {
+  if (!items || !items.length) {
+    body.innerHTML = '<p class="ai-placeholder">No feedback returned. Please try again.</p>';
+    return;
+  }
+
+  const allOk = items.filter(i => i.pattern_ok && i.complete_ok).length;
+  const fixCount = items.length - allOk;
+
+  let html = '';
+  for (const item of items) {
+    const patChip = item.pattern_ok
+      ? `<span class="chip chip-ok">✓ Modal + Passive</span>`
+      : `<span class="chip chip-fix">✗ Modal + Passive</span>`;
+    const compChip = item.complete_ok
+      ? `<span class="chip chip-ok">✓ Specific</span>`
+      : `<span class="chip chip-warn">⚑ Too vague</span>`;
+
+    html += `<div class="sol-card">
+      <div class="sol-card-hdr">Solution ${item.num} &nbsp;·&nbsp; <strong>${escHtml(item.text)}</strong></div>
+      <div class="sol-card-body">
+        <div class="chips">${patChip}${compChip}</div>
+        <div class="fb-line"><strong>Language:</strong> ${escHtml(item.pattern_comment)}</div>
+        <div class="fb-line"><strong>Detail:</strong> ${escHtml(item.complete_comment)}</div>
+        <div class="fb-rewrite">
+          <div class="fb-rewrite-label">Suggested improvement</div>
+          ${escHtml(item.rewrite)}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // Summary row
+  const bgCol = fixCount === 0 ? '#E1F5EE' : (fixCount <= 2 ? '#FAEEDA' : '#FAECE7');
+  const txtCol = fixCount === 0 ? '#085041' : (fixCount <= 2 ? '#633806' : '#712B13');
+  html += `<div class="ai-summary" style="background:${bgCol};border-top:0.5px solid var(--color-border-tertiary)">
+    <span style="color:${txtCol};font-weight:600">${allOk} of ${items.length} solutions fully correct</span>
+    <span style="color:${txtCol}">${fixCount === 0 ? 'Great work — all solutions meet the required pattern!' : `Please revise ${fixCount} solution${fixCount>1?'s':''} before submitting.`}</span>
+  </div>`;
+
+  body.innerHTML = html;
+}
+
+buildRows();
+loadSaved();
+</script>
+</body>
+</html>
